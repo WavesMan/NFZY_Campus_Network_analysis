@@ -1,0 +1,4 @@
+# Campus network credentials
+USERNAME="<填入你的校园网手机号>@unicom"
+PASSWORD="<填入你的校园网密码>"
+MAC_ADDRESS="11-22-33-44-55-66"

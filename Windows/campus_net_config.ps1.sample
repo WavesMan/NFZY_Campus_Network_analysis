@@ -1,0 +1,14 @@
+<#
+.SYNOPSIS
+    Configuration file for campus network auto-login
+.DESCRIPTION
+    Store your credentials and settings here
+#>
+
+$Config = @{
+    Username = "<填入你的校园网手机号>@unicom"
+    Password = "<填入你的校园网密码>"
+    MacAddress = "11-22-33-44-55-66"
+    WlanUserIp = "0.0.0.0"
+    PortalUrl = "http://192.1.1.55:801/eportal/"
+}
