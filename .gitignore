@@ -3,3 +3,7 @@ Windows/campus_net_config.ps1
 OpenWrt-release_v1.0.7z
 Windows-release_v1.0.7z
 Windows-release_v1.0.tar
+BruteForce/__pycache__/config.cpython-311.pyc
+BruteForce/__pycache__/config.cpython-313.pyc
+BruteForce/dicts/password_dict.txt
+BruteForce/dicts/phone_dict.txt
