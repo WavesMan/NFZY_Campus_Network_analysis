@@ -3,15 +3,29 @@
     Campus network auto-login script for PowerShell
 .DESCRIPTION
     Automatically logs in to campus network with configurable credentials
+    Version: 2.0
 #>
+
+# Logging functions
+function Write-Log {
+    param(
+        [string]$Message,
+        [ValidateSet("INFO","ERROR","DEBUG")]
+        [string]$Level = "INFO"
+    )
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $logMessage = "[$timestamp] [$Level] $Message"
+    Write-Host $logMessage -ForegroundColor $(if($Level -eq "ERROR"){"Red"}elseif($Level -eq "DEBUG"){"Gray"}else{"Green"})
+    Add-Content -Path ".\campus_net.log" -Value $logMessage
+}
 
 # Load configuration
 try {
     . .\campus_net_config.ps1
-    Write-Host "Configuration loaded successfully" -ForegroundColor Green
+    Write-Log "Configuration loaded successfully"
 }
 catch {
-    Write-Host "Error loading configuration: $_" -ForegroundColor Red
+    Write-Log "Error loading configuration: $_" -Level "ERROR"
     exit 1
 }
 
@@ -44,11 +58,85 @@ $headers = @{
     "User-Agent"               = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
 }
 
-# Execute the login request
-try {
-    $response = Invoke-WebRequest -Uri $uri -Method POST -Headers $headers -Body $body
-    Write-Host "Login successful! Status code:" $response.StatusCode -ForegroundColor Green
+# Check network connectivity
+function Test-Network {
+    $retryCount = 0
+    $maxRetries = 10
+    $retryDelay = 3
+    
+    while ($retryCount -lt $maxRetries) {
+        try {
+            if (Test-Connection -ComputerName 192.1.1.55 -Count 1 -Quiet) {
+                Write-Log "Network connectivity confirmed"
+                return $true
+            }
+        }
+        catch {
+            Write-Log "Network test failed (attempt $($retryCount+1)/$maxRetries)" -Level "DEBUG"
+        }
+        $retryCount++
+        if ($retryCount -lt $maxRetries) {
+            Start-Sleep -Seconds $retryDelay
+        }
+    }
+    Write-Log "Network connectivity check failed after $maxRetries attempts" -Level "ERROR"
+    return $false
 }
-catch {
-    Write-Host "Login failed:" $_.Exception.Message -ForegroundColor Red
+
+# Execute the login request with retries
+$maxRetries = 3
+$retryDelay = 5
+$attempt = 1
+$success = $false
+
+if (Test-Network) {
+    while ($attempt -le $maxRetries -and -not $success) {
+        Write-Log "Attempting login (try $attempt of $maxRetries)"
+        
+        try {
+            $response = Invoke-WebRequest -Uri $uri -Method POST -Headers $headers -Body $body -ErrorAction Stop
+            $responseContent = $response.Content
+            Write-Log "Login successful! Status code: $($response.StatusCode)"
+            Write-Log "Response length: $($responseContent.Length) chars"
+            if ($Config.LogLevel -eq "DEBUG") {
+                # Save full response to separate file
+                $responseFile = ".\login_response_$(Get-Date -Format 'yyyyMMddHHmmss').html"
+                $responseContent | Out-File -FilePath $responseFile
+                Write-Log "Full response saved to: $responseFile" -Level "DEBUG"
+                # Also log first 200 chars for quick reference
+                $preview = $responseContent.Substring(0, [Math]::Min(200, $responseContent.Length))
+                Write-Log "Response preview: $preview..." -Level "DEBUG"
+            }
+            $success = $true
+        }
+        catch {
+            $statusCode = $_.Exception.Response.StatusCode.Value__
+            $errorMsg = $_.Exception.Message
+            $responseContent = if($_.Exception.Response) { 
+                (New-Object System.IO.StreamReader $_.Exception.Response.GetResponseStream()).ReadToEnd() 
+            } else { "" }
+            
+            Write-Log "Login failed (attempt $attempt): Status $statusCode, Error: $errorMsg" -Level "ERROR"
+            if ($Config.LogLevel -eq "DEBUG") {
+                # Save full error response to separate file
+                $errorFile = ".\login_error_$(Get-Date -Format 'yyyyMMddHHmmss').html"
+                $responseContent | Out-File -FilePath $errorFile
+                Write-Log "Full error response saved to: $errorFile" -Level "DEBUG"
+                # Also log first 200 chars for quick reference
+                $preview = $responseContent.Substring(0, [Math]::Min(200, $responseContent.Length))
+                Write-Log "Error preview: $preview..." -Level "DEBUG"
+            }
+            
+            $attempt++
+            if ($attempt -le $maxRetries) {
+                Write-Log "Waiting $retryDelay seconds before next attempt..."
+                Start-Sleep -Seconds $retryDelay
+            }
+        }
+    }
+}
+
+if (-not $success) {
+    Write-Log "All login attempts failed" -Level "ERROR"
+    exit 1
 }

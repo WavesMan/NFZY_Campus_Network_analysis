@@ -1,5 +1,0 @@
-2025-06-02 19:19:29,546 - INFO - Generating phone numbers: prefix=138, range=10000000-10000099
-2025-06-02 19:19:29,547 - INFO - Saved dictionary to BruteForce\dicts\phone_dict.txt with 100 entries
-2025-06-02 19:19:29,547 - INFO - Saved dictionary to BruteForce\dicts\password_dict.txt with 16 entries
-2025-06-02 19:24:51,146 - INFO - Loaded 100 phones and 16 passwords
-2025-06-02 19:25:02,893 - INFO - Brute force completed. Found 0 valid credentials
