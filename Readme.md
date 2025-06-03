@@ -2,6 +2,8 @@
 
 > **写在前面**
 > 本次分析校园网分析工程，仅用于学习交流，未得到学校有关部门与相关人员授权，禁止用于商业用途。若校方联系要求，将会立即删除清档。
+
+> 本项目遵循开源协议 [MIT](LICENSE) 开源。 
 ---
 
 #### 目录
@@ -97,11 +99,11 @@ POST http://192.1.1.55:801/eportal/?c=ACSetting&a=Login
    chmod +x /etc/init.d/auto_login.sh
    /etc/init.d/auto_login.sh enable
    ```
-8. 重启路由器，访问OpenWrt路由器Web管理页，`系统 > 启动项 > 启动脚本` ,你将能看到 `启动脚本：auto_login.bash` 
+8. 重启路由器，访问OpenWrt路由器Web管理页，`系统 > 启动项 > 启动脚本` ,你将能看到 `启动脚本：auto_login.sh` 
     | 文件名 | 功能 |
     |--------|------|
     | `auto_login` | 配置校园网账号密码 |
     | `auto_login.sh` | 自动登录校园网 |
 
 #### 开发者选项
-对于OpenWrt系统，可使用命令 `logread | grep auto_login.bash` 查看脚本执行日志
+对于OpenWrt系统，可使用命令 `logread | grep auto_login.sh` 查看脚本执行日志
