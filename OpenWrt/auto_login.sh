@@ -167,9 +167,16 @@ curl_request() {
     # Create temp file for response
     RESPONSE_FILE="/tmp/auto_login_response_$$"
     
+    # Use detected values or fallback to configured values
+    local login_ip=${DETECTED_IP:-$IP_ADDRESS}
+    local login_mac=${DETECTED_MAC:-$MAC_ADDRESS}
+    
+    # Ensure MAC address format is correct (replace : with - if needed)
+    login_mac=$(echo "$login_mac" | tr ':' '-')
+    
     # Make request and capture full response
     curl -X POST \
-    "http://192.1.1.55:801/eportal/?c=ACSetting&a=Login&protocol=http:&hostname=192.1.1.55&iTermType=1&wlanuserip=${DETECTED_IP:-0.0.0.0}&wlanacip=null&wlanacname=null&mac=${DETECTED_MAC:-$MAC_ADDRESS}&ip=0.0.0.0&enAdvert=0&queryACIP=0&jsVersion=2.4.3&loginMethod=1" \
+    "http://192.1.1.55:801/eportal/?c=ACSetting&a=Login&protocol=http:&hostname=192.1.1.55&iTermType=1&wlanuserip=${login_ip}&wlanacip=null&wlanacname=null&mac=${login_mac}&ip=${login_ip}&enAdvert=0&queryACIP=0&jsVersion=2.4.3&loginMethod=1" \
     -H "User-Agent: Mozilla/5.0" \
     --data-raw "DDDDD=%2C0%2C${USERNAME}&upass=${PASSWORD}&R1=0&R2=0&R3=0&R6=0&para=00&0MKKey=123456&buttonClicked=&redirect_url=&err_flag=&username=&password=&user=&cmd=&Login=&v6ip=" \
     -o "$RESPONSE_FILE" \
