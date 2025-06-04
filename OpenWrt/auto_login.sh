@@ -111,15 +111,19 @@ initialize_system() {
         
         # Run net-ip.sh to get network info
         if [ -f "./net-ip.sh" ]; then
-            network_info=$(./net-ip.sh)
+            network_info=$("${INSTALL_DIR}/net-ip.sh")
             DETECTED_IP=$(echo "$network_info" | grep -oE 'IP=[^ ]+' | cut -d= -f2)
             DETECTED_MAC=$(echo "$network_info" | grep -oE 'MAC=[^ ]+' | cut -d= -f2)
+            NETWORK_GATEWAY=$(echo "$network_info" | grep -oE 'GATEWAY=[^ ]+' | cut -d= -f2)
+            NETWORK_INTERFACE=$(echo "$network_info" | grep -oE 'INTERFACE=[^ ]+' | cut -d= -f2)
             
             # Update config file if values are detected
             if [ -n "$DETECTED_IP" ] && [ -n "$DETECTED_MAC" ]; then
                 sed -i "/^DETECTED_IP=/c\DETECTED_IP=\"$DETECTED_IP\"" "/etc/config/auto_login"
                 sed -i "/^DETECTED_MAC=/c\DETECTED_MAC=\"$DETECTED_MAC\"" "/etc/config/auto_login"
-                log_info "Updated network info: IP=$DETECTED_IP MAC=$DETECTED_MAC"
+                [ -n "$NETWORK_GATEWAY" ] && sed -i "/^NETWORK_GATEWAY=/c\NETWORK_GATEWAY=\"$NETWORK_GATEWAY\"" "/etc/config/auto_login"
+                [ -n "$NETWORK_INTERFACE" ] && sed -i "/^NETWORK_INTERFACE=/c\NETWORK_INTERFACE=\"$NETWORK_INTERFACE\"" "/etc/config/auto_login"
+                log_info "Updated network info: IP=$DETECTED_IP MAC=$DETECTED_MAC Gateway=$NETWORK_GATEWAY Interface=$NETWORK_INTERFACE"
             else
                 log_error "Failed to detect network information"
             fi
