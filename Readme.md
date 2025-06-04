@@ -107,3 +107,49 @@ POST http://192.1.1.55:801/eportal/?c=ACSetting&a=Login
 
 #### 开发者选项
 对于OpenWrt系统，可使用命令 `logread | grep auto_login.sh` 查看脚本执行日志
+
+#### 增强功能说明 (v3.0+)
+
+##### 1. 系统自动初始化
+脚本现在包含以下自动初始化功能：
+- 自动配置清华源镜像加速
+- 智能包依赖管理（支持多版本/替代方案）
+- 自动更新系统软件包
+- 必要组件检查安装（curl/wget/git/bash）
+
+##### 2. 智能包管理
+| 功能需求 | 首选包 | 备选方案 |
+|---------|--------|----------|
+| 下载工具 | wget-ssl | wget-nossl → uclient-fetch |
+| 版本控制 | git | 无 |
+| Shell环境 | bash | 无 |
+
+##### 3. 日志系统增强
+- 详细记录初始化过程
+- 关键操作状态跟踪
+- 错误分级记录（INFO/ERROR/DEBUG）
+- 实时状态显示优化
+
+##### 4. 使用示例
+```sh
+# 测试运行（完整流程）
+/etc/init.d/auto_login.sh run
+
+# 查看详细日志
+logread | grep auto_login.sh
+
+# 仅检查系统初始化
+/etc/init.d/auto_login.sh start --init-only
+```
+
+##### 5. 配置文件说明
+`/etc/config/auto_login` 新增可选参数：
+```sh
+# 日志级别控制（info/error/debug）
+LOG_LEVEL="info"
+
+# 强制重新初始化（0/1）
+FORCE_REINIT=0
+```
+
+> **注意**：v3.0+版本需要OpenWrt 21.02或更高版本支持
