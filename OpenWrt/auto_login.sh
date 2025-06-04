@@ -36,7 +36,7 @@ curl_request() {
     log_info "Starting login request"
     
     # Create temp file for response
-    RESPONSE_FILE=$(mktemp)
+    RESPONSE_FILE="/tmp/auto_login_response_$$"
     
     # Make request and capture full response (silent mode with -s)
     curl -s -X POST \
@@ -46,9 +46,9 @@ curl_request() {
     -o "$RESPONSE_FILE" \
     -D "${RESPONSE_FILE}.headers"
     
-    local status=$?
-    local http_code=$(grep -Eo 'HTTP/[0-9]\.[0-9] [0-9]{3}' "${RESPONSE_FILE}.headers" | awk '{print $2}' | tail -1)
-    local response_content=$(cat "$RESPONSE_FILE")
+    status=$?
+    http_code=$(grep 'HTTP/[0-9]\.[0-9] [0-9]\{3\}' "${RESPONSE_FILE}.headers" | awk '{print $2}' | tail -1)
+    response_content=$(cat "$RESPONSE_FILE")
     
     log_info "HTTP Status: $http_code"
     # Only log full response in debug mode
@@ -78,9 +78,9 @@ start() {
     done
 
     # Retry up to 3 times
-    local max_retries=3
-    local retry_delay=5
-    local attempt=1
+    max_retries=3
+    retry_delay=5
+    attempt=1
 
     while [ $attempt -le $max_retries ]; do
         log_info "Attempting login (try $attempt of $max_retries)..."
