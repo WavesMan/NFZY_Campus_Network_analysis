@@ -171,8 +171,8 @@ curl_request() {
     local login_ip=${DETECTED_IP:-$IP_ADDRESS}
     local login_mac=${DETECTED_MAC:-$MAC_ADDRESS}
     
-    # Ensure MAC address format is correct (replace : with - if needed)
-    login_mac=$(echo "$login_mac" | tr ':' '-')
+    # Normalize MAC address format (remove all non-alphanum then add hyphens)
+    login_mac=$(echo "$login_mac" | tr -d -c '[:alnum:]' | sed 's/\(..\)\(..\)\(..\)\(..\)\(..\)\(..\)/\1-\2-\3-\4-\5-\6/')
     
     # Make request and capture full response
     curl -X POST \
