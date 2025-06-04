@@ -2,3 +2,14 @@
 USERNAME="<填入你的校园网手机号>@unicom"
 PASSWORD="<填入你的校园网密码>"
 MAC_ADDRESS="11-22-33-44-55-66"
+
+# Network interface configuration (will be auto-detected if empty)
+# Example values from test.sh: 
+#  GATEWAY_FILTER="10.14.127.255"  # Gateway IP to filter for IP detection
+#  INTERFACE_PATTERN="phy0-sta0"   # Interface name pattern for direct detection
+NETWORK_GATEWAY=""
+NETWORK_INTERFACE=""
+
+# Auto-detected values (do not modify manually)
+DETECTED_IP=""
+DETECTED_MAC=""

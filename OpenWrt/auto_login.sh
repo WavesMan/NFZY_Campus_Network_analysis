@@ -49,6 +49,7 @@ install_required_packages() {
     wget:wget-ssl:wget-nossl:uclient-fetch
     git:git
     bash:bash
+    net-tools:net-tools:iproute2
     "
     
     for pkg_line in $PKG_MAP; do
@@ -102,6 +103,31 @@ initialize_system() {
     install_required_packages
     
     log_info "System initialization completed"
+    
+    # Detect network information
+    log_info "Detecting network information..."
+    if [ -f "/etc/config/auto_login" ]; then
+        . "/etc/config/auto_login"
+        
+        # Run test.sh to get network info
+        if [ -f "./test.sh" ]; then
+            network_info=$(./test.sh)
+            DETECTED_IP=$(echo "$network_info" | grep -oP 'IP=\K[^ ]+')
+            DETECTED_MAC=$(echo "$network_info" | grep -oP 'MAC=\K[^ ]+')
+            
+            # Update config file if values are detected
+            if [ -n "$DETECTED_IP" ] && [ -n "$DETECTED_MAC" ]; then
+                sed -i "/^DETECTED_IP=/c\DETECTED_IP=\"$DETECTED_IP\"" "/etc/config/auto_login"
+                sed -i "/^DETECTED_MAC=/c\DETECTED_MAC=\"$DETECTED_MAC\"" "/etc/config/auto_login"
+                log_info "Updated network info: IP=$DETECTED_IP MAC=$DETECTED_MAC"
+            else
+                log_error "Failed to detect network information"
+            fi
+        else
+            log_error "test.sh not found, using configured values"
+        fi
+    fi
+    
     return 0
 }
 
@@ -139,29 +165,35 @@ curl_request() {
     
     # Make request and capture full response
     curl -X POST \
-    "http://192.1.1.55:801/eportal/?c=ACSetting&a=Login&protocol=http:&hostname=192.1.1.55&iTermType=1&wlanuserip=10.14.88.96&wlanacip=null&wlanacname=null&mac=${MAC_ADDRESS}&ip=0.0.0.0&enAdvert=0&queryACIP=0&jsVersion=2.4.3&loginMethod=1" \
+    "http://192.1.1.55:801/eportal/?c=ACSetting&a=Login&protocol=http:&hostname=192.1.1.55&iTermType=1&wlanuserip=${DETECTED_IP:-0.0.0.0}&wlanacip=null&wlanacname=null&mac=${DETECTED_MAC:-$MAC_ADDRESS}&ip=0.0.0.0&enAdvert=0&queryACIP=0&jsVersion=2.4.3&loginMethod=1" \
     -H "User-Agent: Mozilla/5.0" \
     --data-raw "DDDDD=%2C0%2C${USERNAME}&upass=${PASSWORD}&R1=0&R2=0&R3=0&R6=0&para=00&0MKKey=123456&buttonClicked=&redirect_url=&err_flag=&username=&password=&user=&cmd=&Login=&v6ip=" \
     -o "$RESPONSE_FILE" \
     -D "${RESPONSE_FILE}.headers" \
-    -s -S  # Silent but show errors
+    -s -S -L  # Silent but show errors, follow redirects
     
     status=$?
     http_code=$(grep 'HTTP/[0-9]\.[0-9] [0-9]\{3\}' "${RESPONSE_FILE}.headers" | awk '{print $2}' | tail -1)
     response_content=$(cat "$RESPONSE_FILE")
     
     log_info "HTTP Status: $http_code"
-    # Only log full response in debug mode
-    if [ "$LOG_LEVEL" = "debug" ]; then
-        log_debug "Full response: $response_content"
-    else
-        log_info "Response length: ${#response_content} chars"
+    redirect_url=$(grep -i '^Location:' "${RESPONSE_FILE}.headers" | cut -d' ' -f2- | tr -d '\r')
+    
+    if [ -n "$redirect_url" ]; then
+        log_info "Redirect URL: $redirect_url"
     fi
     
+    # Always log response content for error analysis
+    log_info "Response content (${#response_content} chars): $response_content"
+    
     if [ $status -eq 0 ] && [ "$http_code" -eq 200 ]; then
-        log_info "Login successful! Response: $response_content"
+        log_info "Login successful!"
         rm -f "$RESPONSE_FILE" "${RESPONSE_FILE}.headers"
         return 0
+    elif [ "$http_code" -eq 302 ]; then
+        log_error "Login redirected (302)! Status: $status, Location: $redirect_url, Response: $response_content"
+        rm -f "$RESPONSE_FILE" "${RESPONSE_FILE}.headers"
+        return 1
     else
         log_error "Login failed! Status: $status, HTTP: $http_code, Response: $response_content"
         rm -f "$RESPONSE_FILE" "${RESPONSE_FILE}.headers"
