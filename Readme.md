@@ -87,19 +87,21 @@ POST http://192.1.1.55:801/eportal/?c=ACSetting&a=Login
    | `campus_net_login.bat` | 调用 `campus_net_login.ps1` 自动登录校园网 |
 
 ### 2. OpenWrt 路由器
-1. 克隆本库 `auto_login.sample` `auto_login.sh`
+1. 克隆本库 `auto_login.sample` `auto_login.sh` `net-ip.sh`
 2. 复制 `auto_login.sample` 一份删除末尾拓展名 `.sample` ，命名为 `auto_login`
 3. 修改 `auto_login` 中的 `username` 和 `password` 为你的校园网账号和密码 
     > 2025年6月2日记录： `username` 中运营商值 `@unicom` 仅中国联通可用，无需修改
 4. 在OpenWrt路由器中安装 `curl` 软件包，示例命令 `opkg install curl`
 5. 将 `auto_login.sh` 上传至路由器 `/etc/init.d/` 目录下
-6. 将 `auto_login` 上传至路由器 `/etc/config/` 目录下
-7. 执行命令
+6.  将 `net-ip.sh` 上传至路由器 `/etc/init.d/` 目录下
+7. 将 `auto_login` 上传至路由器 `/etc/config/` 目录下
+8. 执行命令
    ```sh
    chmod +x /etc/init.d/auto_login.sh
+   chmod +x /etc/init.d/net-ip.sh
    /etc/init.d/auto_login.sh enable
    ```
-8. 重启路由器，访问OpenWrt路由器Web管理页，`系统 > 启动项 > 启动脚本` ,你将能看到 `启动脚本：auto_login.sh` 
+9. 重启路由器，访问OpenWrt路由器Web管理页，`系统 > 启动项 > 启动脚本` ,你将能看到 `启动脚本：auto_login.sh` 
     | 文件名 | 功能 |
     |--------|------|
     | `auto_login` | 配置校园网账号密码 |

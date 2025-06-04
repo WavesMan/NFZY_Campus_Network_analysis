@@ -49,7 +49,7 @@ install_required_packages() {
     wget:wget-ssl:wget-nossl:uclient-fetch
     git:git
     bash:bash
-    net-tools:net-tools:iproute2
+    net-tools:busybox:iproute2
     "
     
     for pkg_line in $PKG_MAP; do
@@ -109,11 +109,11 @@ initialize_system() {
     if [ -f "/etc/config/auto_login" ]; then
         . "/etc/config/auto_login"
         
-        # Run test.sh to get network info
-        if [ -f "./test.sh" ]; then
-            network_info=$(./test.sh)
-            DETECTED_IP=$(echo "$network_info" | grep -oP 'IP=\K[^ ]+')
-            DETECTED_MAC=$(echo "$network_info" | grep -oP 'MAC=\K[^ ]+')
+        # Run net-ip.sh to get network info
+        if [ -f "./net-ip.sh" ]; then
+            network_info=$(./net-ip.sh)
+            DETECTED_IP=$(echo "$network_info" | grep -oE 'IP=[^ ]+' | cut -d= -f2)
+            DETECTED_MAC=$(echo "$network_info" | grep -oE 'MAC=[^ ]+' | cut -d= -f2)
             
             # Update config file if values are detected
             if [ -n "$DETECTED_IP" ] && [ -n "$DETECTED_MAC" ]; then
@@ -124,7 +124,7 @@ initialize_system() {
                 log_error "Failed to detect network information"
             fi
         else
-            log_error "test.sh not found, using configured values"
+            log_error "net-ip.sh not found, using configured values"
         fi
     fi
     
