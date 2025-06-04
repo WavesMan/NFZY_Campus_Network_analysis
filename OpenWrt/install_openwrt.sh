@@ -9,11 +9,11 @@ if [ ! -f "/etc/openwrt_release" ]; then
     exit 1
 fi
 
-# Repository URLs (ash compatible format) - dev branch
+# Repository URLs (ash compatible format) - main branch
 REPO_CHOICES="\
-GitHub,https://raw.githubusercontent.com/WavesMan/NFZY_Campus_Network_analysis/dev/OpenWrt \
-Gitee,https://gitee.com/waves-man/NFZY_Campus_Network_analysis/raw/dev/OpenWrt \
-GitCode,https://gitcode.com/api/v5/repos/WavesMan/NFZY_Campus_Network_analysis/raw/OpenWrt?ref=dev"
+GitHub,https://raw.githubusercontent.com/WavesMan/NFZY_Campus_Network_analysis/main/OpenWrt \
+Gitee,https://gitee.com/waves-man/NFZY_Campus_Network_analysis/raw/main/OpenWrt \
+GitCode,https://gitcode.com/api/v5/repos/WavesMan/NFZY_Campus_Network_analysis/raw/OpenWrt?ref=main"
 
 # Let user select repository
 echo "Available download sources:"
@@ -32,7 +32,7 @@ case $choice in
         ;;
     *)
         echo "Invalid selection, using GitHub as default"
-        REPO_URL="https://raw.githubusercontent.com/WavesMan/NFZY_Campus_Network_analysis/dev/OpenWrt"
+        REPO_URL="https://raw.githubusercontent.com/WavesMan/NFZY_Campus_Network_analysis/main/OpenWrt"
         ;;
 esac
 

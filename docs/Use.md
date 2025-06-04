@@ -4,7 +4,7 @@
 
 ```bash
 # 下载并运行安装脚本
-wget https://raw.githubusercontent.com/WavesMan/NFZY_Campus_Network_analysis/dev/OpenWrt/install_openwrt.sh
+wget https://raw.githubusercontent.com/WavesMan/NFZY_Campus_Network_analysis/main/OpenWrt/install_openwrt.sh
 sh install_openwrt.sh
 ```
 
@@ -18,9 +18,9 @@ sh install_openwrt.sh
 
 1. 下载必要文件：
 ```bash
-wget https://raw.githubusercontent.com/WavesMan/NFZY_Campus_Network_analysis/dev/OpenWrt/auto_login.sh -O /etc/init.d/auto_login.sh
-wget https://raw.githubusercontent.com/WavesMan/NFZY_Campus_Network_analysis/dev/OpenWrt/net-ip.sh -O /etc/init.d/net-ip.sh
-wget https://raw.githubusercontent.com/WavesMan/NFZY_Campus_Network_analysis/dev/OpenWrt/auto_login.sample -O /etc/config/auto_login
+wget https://raw.githubusercontent.com/WavesMan/NFZY_Campus_Network_analysis/main/OpenWrt/auto_login.sh -O /etc/init.d/auto_login.sh
+wget https://raw.githubusercontent.com/WavesMan/NFZY_Campus_Network_analysis/main/OpenWrt/net-ip.sh -O /etc/init.d/net-ip.sh
+wget https://raw.githubusercontent.com/WavesMan/NFZY_Campus_Network_analysis/main/OpenWrt/auto_login.sample -O /etc/config/auto_login
 chmod +x /etc/init.d/auto_login.sh /etc/init.d/net-ip.sh
 ```
 
