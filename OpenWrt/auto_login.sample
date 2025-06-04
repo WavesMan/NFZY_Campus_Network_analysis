@@ -1,6 +1,6 @@
 # Campus network credentials
-USERNAME="<填入你的校园网手机号>@unicom"
-PASSWORD="<填入你的校园网密码>"
+USERNAME="<Enter your campus network mobile phone number>@unicom"
+PASSWORD="<Enter your campus network mobile PASSWORD>"
 MAC_ADDRESS="11-22-33-44-55-66"
 
 # Network interface configuration (will be auto-detected if empty)
