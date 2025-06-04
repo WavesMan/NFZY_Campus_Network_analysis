@@ -43,19 +43,45 @@ update_packages() {
 }
 
 install_required_packages() {
-    REQUIRED_PKGS="curl wget git bash"
+    # Define packages with alternatives
+    PKG_MAP="
+    curl:curl
+    wget:wget-ssl:wget-nossl:uclient-fetch
+    git:git
+    bash:bash
+    "
     
-    for pkg in $REQUIRED_PKGS; do
-        if ! opkg list-installed | grep -q "^$pkg "; then
-            log_info "Installing $pkg"
-            opkg install $pkg --force-overwrite >/dev/null 2>&1
-            if opkg list-installed | grep -q "^$pkg "; then
-                log_info "Successfully installed $pkg"
-            else
-                log_error "Failed to install $pkg"
+    for pkg_line in $PKG_MAP; do
+        pkg_name=$(echo $pkg_line | cut -d: -f1)
+        alternatives=$(echo $pkg_line | cut -d: -f2-)
+        
+        # Check if any variant is already installed
+        installed=false
+        for alt in $(echo $alternatives | tr ":" " "); do
+            if opkg list-installed | grep -q "^$alt "; then
+                log_info "$pkg_name functionality provided by $alt (already installed)"
+                installed=true
+                break
             fi
-        else
-            log_info "$pkg is already installed"
+        done
+        
+        if [ "$installed" = "false" ]; then
+            # Try installing alternatives in order
+            for alt in $(echo $alternatives | tr ":" " "); do
+                log_info "Attempting to install $pkg_name using $alt"
+                opkg install $alt --force-overwrite >/dev/null 2>&1
+                if opkg list-installed | grep -q "^$alt "; then
+                    log_info "Successfully installed $alt for $pkg_name functionality"
+                    installed=true
+                    break
+                else
+                    log_info "Failed to install $alt"
+                fi
+            done
+            
+            if [ "$installed" = "false" ]; then
+                log_error "Could not install any package providing $pkg_name functionality"
+            fi
         fi
     done
 }
