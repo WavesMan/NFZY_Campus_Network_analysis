@@ -104,16 +104,24 @@ install_config() {
             ;;
     esac
 
-    # Update config file
-    sed -i "s/<Enter your campus network mobile phone number>/${phone}/g" "${CONFIG_DIR}/auto_login"
-    sed -i "s/<Enter your campus network password>/${password}/g" "${CONFIG_DIR}/auto_login"
-    sed -i "s/^NETWORK_GATEWAY=.*/NETWORK_GATEWAY=\"${gateway}\"/g" "${CONFIG_DIR}/auto_login"
-    sed -i "s/^NETWORK_INTERFACE=.*/NETWORK_INTERFACE=\"${interface}\"/g" "${CONFIG_DIR}/auto_login"
+    # Update config file with safer delimiter
+    sed -i "s|<Enter your campus network mobile phone number>|${phone}|g" "${CONFIG_DIR}/auto_login"
+    sed -i "s|<Enter your campus network password>|${password}|g" "${CONFIG_DIR}/auto_login"
+    sed -i "s|^NETWORK_GATEWAY=.*|NETWORK_GATEWAY=\"${gateway}\"|g" "${CONFIG_DIR}/auto_login"
+    sed -i "s|^NETWORK_INTERFACE=.*|NETWORK_INTERFACE=\"${interface}\"|g" "${CONFIG_DIR}/auto_login"
     
-    echo "Config file updated with:"
-    echo "Phone: ${phone}"
-    echo "Gateway: ${gateway}"
-    echo "Interface: ${interface}"
+    # Verify replacements
+    if grep -q "${phone}@unicom" "${CONFIG_DIR}/auto_login" && \
+       grep -q "${password}" "${CONFIG_DIR}/auto_login"; then
+        echo "Config file successfully updated with:"
+        echo "Phone: ${phone}"
+        echo "Gateway: ${gateway}"
+        echo "Interface: ${interface}"
+    else
+        echo "Error: Failed to update config file!"
+        echo "Please check the configuration manually at: ${CONFIG_DIR}/auto_login"
+        exit 1
+    fi
 }
 
 # Main installation process
