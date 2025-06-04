@@ -87,6 +87,8 @@ POST http://192.1.1.55:801/eportal/?c=ACSetting&a=Login
    | `campus_net_login.bat` | 调用 `campus_net_login.ps1` 自动登录校园网 |
 
 ### 2. OpenWrt 路由器
+**详尽的操作教程**：[教程](./docs/Use.md)
+
 1. 克隆本库 `auto_login.sample` `auto_login.sh` `net-ip.sh`
 2. 复制 `auto_login.sample` 一份删除末尾拓展名 `.sample` ，命名为 `auto_login`
 3. 修改 `auto_login` 中的 `username` 和 `password` 为你的校园网账号和密码 
@@ -125,6 +127,7 @@ POST http://192.1.1.55:801/eportal/?c=ACSetting&a=Login
 | 下载工具 | wget-ssl | wget-nossl → uclient-fetch |
 | 版本控制 | git | 无 |
 | Shell环境 | bash | 无 |
+| 网络工具 | net-tools | busybox → iputils-ping |
 
 ##### 3. 日志系统增强
 - 详细记录初始化过程
