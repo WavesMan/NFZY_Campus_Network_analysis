@@ -1,11 +1,83 @@
 #!/bin/sh /etc/rc.common
 # Script Name: auto_login.sh
-# Description: Auto login to campus network on boot
+# Description: Auto login to campus network on boot with system initialization
 # Author: WaveYo
-# Version: 2.0
+# Version: 3.0
 
 START=99
 STOP=10
+
+# System initialization functions
+configure_opkg_sources() {
+    log_info "Checking opkg sources configuration"
+    
+    # Backup current sources
+    cp /etc/opkg/distfeeds.conf /etc/opkg/distfeeds.conf.bak
+    
+    # Replace with Tsinghua mirror
+    sed -i 's|downloads.openwrt.org|mirrors.tuna.tsinghua.edu.cn/openwrt|g' /etc/opkg/distfeeds.conf
+    
+    # Verify replacement
+    if grep -q "mirrors.tuna.tsinghua.edu.cn" /etc/opkg/distfeeds.conf; then
+        log_info "Successfully configured Tsinghua mirror"
+        return 0
+    else
+        log_error "Failed to configure Tsinghua mirror"
+        return 1
+    fi
+}
+
+update_packages() {
+    log_info "Starting package updates"
+    opkg update >/dev/null 2>&1
+    log_info "Package lists updated"
+    
+    log_info "Starting package upgrades"
+    upgradable_pkgs=$(opkg list-upgradable | awk '{print $1}')
+    if [ -n "$upgradable_pkgs" ]; then
+        opkg upgrade $upgradable_pkgs --force-overwrite --force-downgrade >/dev/null 2>&1
+        log_info "Packages upgraded: $upgradable_pkgs"
+    else
+        log_info "No packages to upgrade"
+    fi
+}
+
+install_required_packages() {
+    REQUIRED_PKGS="curl wget git bash"
+    
+    for pkg in $REQUIRED_PKGS; do
+        if ! opkg list-installed | grep -q "^$pkg "; then
+            log_info "Installing $pkg"
+            opkg install $pkg --force-overwrite >/dev/null 2>&1
+            if opkg list-installed | grep -q "^$pkg "; then
+                log_info "Successfully installed $pkg"
+            else
+                log_error "Failed to install $pkg"
+            fi
+        else
+            log_info "$pkg is already installed"
+        fi
+    done
+}
+
+initialize_system() {
+    log_info "Starting system initialization"
+    
+    # Step 1: Configure opkg sources
+    if ! configure_opkg_sources; then
+        log_error "Aborting initialization due to source configuration failure"
+        return 1
+    fi
+    
+    # Step 2: Update packages
+    update_packages
+    
+    # Step 3: Install required packages
+    install_required_packages
+    
+    log_info "System initialization completed"
+    return 0
+}
 
 # Logging functions
 log_info() {
@@ -33,18 +105,20 @@ else
 fi
 
 curl_request() {
-    log_info "Starting login request"
+    log_info "Starting campus network login"
+    echo "Logging in to campus network..."
     
     # Create temp file for response
     RESPONSE_FILE="/tmp/auto_login_response_$$"
     
-    # Make request and capture full response (silent mode with -s)
-    curl -s -X POST \
+    # Make request and capture full response
+    curl -X POST \
     "http://192.1.1.55:801/eportal/?c=ACSetting&a=Login&protocol=http:&hostname=192.1.1.55&iTermType=1&wlanuserip=10.14.88.96&wlanacip=null&wlanacname=null&mac=${MAC_ADDRESS}&ip=0.0.0.0&enAdvert=0&queryACIP=0&jsVersion=2.4.3&loginMethod=1" \
     -H "User-Agent: Mozilla/5.0" \
     --data-raw "DDDDD=%2C0%2C${USERNAME}&upass=${PASSWORD}&R1=0&R2=0&R3=0&R6=0&para=00&0MKKey=123456&buttonClicked=&redirect_url=&err_flag=&username=&password=&user=&cmd=&Login=&v6ip=" \
     -o "$RESPONSE_FILE" \
-    -D "${RESPONSE_FILE}.headers"
+    -D "${RESPONSE_FILE}.headers" \
+    -s -S  # Silent but show errors
     
     status=$?
     http_code=$(grep 'HTTP/[0-9]\.[0-9] [0-9]\{3\}' "${RESPONSE_FILE}.headers" | awk '{print $2}' | tail -1)
@@ -70,6 +144,12 @@ curl_request() {
 }
 
 start() {
+    # Initialize system first
+    if ! initialize_system; then
+        log_error "System initialization failed"
+        exit 1
+    fi
+
     # Wait for network connectivity
     log_info "Checking network connectivity..."
     until ping -c1 192.1.1.55 >/dev/null 2>&1; do
