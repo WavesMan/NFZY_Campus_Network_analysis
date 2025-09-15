@@ -1,0 +1,14 @@
+{
+  "username": "<your-phone>@unicom",
+  "password": "<your-password>",
+  "auth_server": "192.1.1.55",
+  "auth_port": "801",
+  "check_interval": 300,
+  "interfaces": [
+    "phy1-sta0",
+    "phy1-sta1"
+  ],
+  "log_level": "INFO",
+  "enable_multicast": true,
+  "multicast_mode": "bandwidth_aggregation"
+}

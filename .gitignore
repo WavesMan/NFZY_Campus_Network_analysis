@@ -10,3 +10,5 @@ BruteForce/dicts/phone_dict.txt
 Windows/campus_net.log
 
 python/.venv
+python/
+new_scripts/campus_net.json-my
